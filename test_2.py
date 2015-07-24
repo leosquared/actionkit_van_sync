@@ -3,6 +3,27 @@ from collections import OrderedDict
 from VAN_CREDENTIALS import api_user, api_key
 
 
+def event_details(person_object):
+
+	""" get location id, role id, shift id, status id using /events/ endpoint """
+
+	url = 'https://api.securevan.com/v4/events/'
+	details_params = {
+		'$expand':'locations,shifts,roles'
+	}
+
+	event_id = person_object['event_id']
+	r = requests.get(url + str(event_id), params=details_params, auth=(api_user, api_key)) 
+	details = r.json()
+
+	person_object['location_id'] = details.get('locations')[0]['locationId']
+	person_object['role_id'] = details.get('roles')[0]['roleId']
+	person_object['shift_id'] = details.get('shifts')[0]['eventShiftId']
+	person_object['status_id'] = 1
+
+	return person_object
+
+
 def find_or_create(person_object):
 	
 	""" Write function to find or create person """
@@ -38,7 +59,9 @@ def find_or_create(person_object):
 	headers = {'Content-type':'application/json'}
 	r = requests.post(url, data=json.dumps(person), headers=headers, auth=(api_user, api_key)) # create person
 
-	return r.json().get('vanId')
+	person_object['vanid'] = r.json().get('vanId')
+
+	return person_object
 
 
 def event_signup(person_object):
@@ -71,27 +94,35 @@ def event_signup(person_object):
 	headers = {'Content-type':'application/json'}
 	r = requests.post(url, data=json.dumps(signup), headers=headers, auth=(api_user, api_key)) # signup or update a signup to an event
 
-	return r.text
+	person_object['signup_id'] = r.text
+
+	return person_object
 
 
 
-
+""" Load file """
 
 infile = csv.reader(open(sys.argv[1], 'rU'))
 
 headers = infile.next()
 data = OrderedDict([])
 
+""" Begin iterating """
+
 for index, row in enumerate(infile):
-	data[index] = OrderedDict([])
+	person = OrderedDict([])
 	for col, header in enumerate(headers):
-		data[index][header] = row[col]
+		person[header] = row[col]
 
-	vanid = find_or_create(data[index])
-	data[index]['vanid'] = vanid
 
-	signup_id = event_signup(data[index])
-	data[index]['signup_id'] = signup_id
+	person = event_details(person)
+	person = find_or_create(person)
+	person = event_signup(person)
+
+	data[index] = person
+
+
+""" Write Results to file """
 
 outfile = csv.writer(open(sys.argv[1] + '_results.csv', 'w'))
 headers = data[0].keys()
