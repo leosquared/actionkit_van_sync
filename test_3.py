@@ -1,6 +1,24 @@
-import requests, json, pprint, csv, sys
+import requests, json, pprint, csv, datetime
+from StringIO import StringIO
 from collections import OrderedDict
 from VAN_CREDENTIALS import api_user, api_key
+from AK_CREDENTIALS import ak_user, ak_pw
+
+
+def get_ak_report(report_short_name):
+
+	""" ping ActionKit's report API to run the report, limited to 1,000 rows only """
+
+	report_url = 'https://donate.everytown.org/rest/v1/report/run/{0}/'.format(report_short_name)
+	params = {
+		'format':'tsv'
+	}
+
+	r = requests.post(report_url, params=params, auth=(ak_user, ak_pw))
+	
+	result_file = StringIO(r.text)
+
+	return csv.reader(result_file, delimiter='\t')
 
 
 def event_details(person_object):
@@ -12,14 +30,15 @@ def event_details(person_object):
 		'$expand':'locations,shifts,roles'
 	}
 
-	event_id = person_object['van_event_id']
-	r = requests.get(url + str(event_id), params=details_params, auth=(api_user, api_key)) 
-	details = r.json()
+	if person_object.get('van_event_id'):
+		event_id = person_object['van_event_id']
+		r = requests.get(url + str(event_id), params=details_params, auth=(api_user, api_key)) 
+		details = r.json()
 
-	person_object['location_id'] = details.get('locations')[0]['locationId']
-	person_object['role_id'] = details.get('roles')[0]['roleId']
-	person_object['shift_id'] = details.get('shifts')[0]['eventShiftId']
-	person_object['status_id'] = 1
+		person_object['location_id'] = details.get('locations')[0]['locationId']
+		person_object['role_id'] = details.get('roles')[0]['roleId']
+		person_object['shift_id'] = details.get('shifts')[0]['eventShiftId']
+		person_object['status_id'] = 1
 
 	return person_object
 
@@ -117,14 +136,13 @@ for row in lu_file:
 
 """ Load file """
 
-infile = csv.reader(open(sys.argv[1], 'rU'))
-
+infile = get_ak_report('reporting-daily-events-upload-2')
 headers = infile.next()
-data = OrderedDict([])
 
 
 """ Begin iterating """
 
+data = OrderedDict([])
 for index, row in enumerate(infile):
 	person = OrderedDict([])
 	for col, header in enumerate(headers):
@@ -143,12 +161,10 @@ for index, row in enumerate(infile):
 
 """ Write Results to file """
 
-outfile = csv.writer(open(sys.argv[1] + '_results.csv', 'w'))
+time_now = datetime.datetime.now().strftime('%m.%d.%y-%H.%M')
+outfile = csv.writer(open(time_now + '_result.csv', 'w'))
 headers = data[0].keys()
 outfile.writerow(headers)
 
 for row in data:
 	outfile.writerow(data[row].values())
-
-""" put person in one by one using findOrCreate """
-""" save resulting VANIDs to dictionary """

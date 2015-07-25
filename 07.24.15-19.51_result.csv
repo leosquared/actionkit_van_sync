@@ -1,0 +1,4 @@
+ak_event_id,van_event_id,first_name,last_name,address1,city,state,zipcode,phone,timestamp_pacific,location_id,role_id,shift_id,status_id,vanid,signup_id
+1396,10907,j.,cantrell,,Portland,OR,97225,5038695125,2015-07-23 17:51:42,2384,80109,14309,1,102610169,807387
+1396,10907,Karl,Hadley,,Sweet Home,OR,97386,5415568040,2015-07-23 10:18:15,2384,80109,14309,1,102606049,807386
+1416,10918,Darlene,Ham,3957 Gatwick Drive,Troy,MI,48083,2487409730,2015-07-23 18:53:51,2389,80109,14320,1,101710393,807385

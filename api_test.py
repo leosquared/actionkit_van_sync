@@ -1,14 +1,12 @@
 import requests, json, pprint
 from requests.auth import HTTPBasicAuth
+from VAN_CREDENTIALS import api_user, api_key
 
 find_or_create = 'https://api.securevan.com/v4/people/findOrCreate'
-find = 'https://api.securevan.com/v4/people/'
+find = 'https://api.securevan.com/v4/people/101409539'
 event = 'https://api.securevan.com/v4/events/11063'
 event_types = 'https://api.securevan.com/v4/events/types'
 
-
-api_user = 'MAIG.APIUser'
-api_key = '8B298C14-393F-49D0-B471-D9520830B89B|1'
 
 test_vanid = '102606750'
 test_event_id = '11063'
@@ -49,8 +47,14 @@ event_params = {
 	'$expand':'locations,codes,shifts,roles'
 }
 
-r = requests.get(event, params=event_params, auth=(api_user, api_key)) # get event info
+# r = requests.get(event, params=event_params, auth=(api_user, api_key)) # get event info
 
+person_params = {
+	'$expand':'phones,emails,addresses'
+}
+
+r = requests.get(find, params=person_params, auth=(api_user, api_key)) # find Leo Chiang
 
 print r
 pprint.pprint(r.json())
+

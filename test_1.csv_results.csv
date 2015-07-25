@@ -1,4 +1,0 @@
-event_id,location_id,first_name,middle_name,last_name,address1,city,state,zipcode,phone,email,shift_id,role_id,status_id,vanid,signup_id
-11063,1287,Leo,,Chiang,22424 Union Turnpike,New York,NY,11364,7189150686,,14468,80109,1,101409539,807395
-11063,1287,Jocelyn,Aline,Strauss,,Tucson,AZ,,5204290915,,14468,80109,1,100216023,807396
-11063,1287,Raphaela,,Abramson,,,,,3057335662,raphaela.abramson@gmail.com,14468,80109,1,102320214,807397
