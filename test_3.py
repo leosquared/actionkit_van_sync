@@ -73,13 +73,13 @@ def find_or_create(person_object):
 			'type':'H'
 			}
 
-	if person_object.get('akid'):
-		person['identifiers'] = [
-			{
-			'type':'AKID',
-			'externalId':person_object.get('akid')
-			}
-		]
+	# if person_object.get('akid'):
+	# 	person['identifiers'] = [
+	# 		{
+	# 		'type':'AKID',
+	# 		'externalId':person_object.get('akid')
+	# 		}
+	# 	]
 
 	url = 'https://api.securevan.com/v4/people/findOrCreate'
 	headers = {'Content-type':'application/json'}
