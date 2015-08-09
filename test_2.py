@@ -16,7 +16,8 @@ def event_details(person_object):
 	r = requests.get(url + str(event_id), params=details_params, auth=(api_user, api_key)) 
 	details = r.json()
 
-	person_object['location_id'] = details.get('locations')[0]['locationId']
+	if details.get('locations')[0]['locationId']:
+		person_object['location_id'] = details.get('locations')[0]['locationId']
 	person_object['role_id'] = details.get('roles')[0]['roleId']
 	person_object['shift_id'] = details.get('shifts')[0]['eventShiftId']
 	person_object['status_id'] = 1

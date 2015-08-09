@@ -1,0 +1,104 @@
+import requests
+import json
+import pandas as pd
+from dateutil.parser import parse
+
+username = "tsmolenskiapiuser"
+MyCpassword = "FDC93551-D7DD-4794-B005-084B5E77ECED|1"
+MyVpassword = "FDC93551-D7DD-4794-B005-084B5E77ECED|0"
+
+def MyC_GetByVANID(ID):
+    """Function returns a json of My Campaign info, when a matching VAN ID is found"""
+    Requestaddy = ("https://api.securevan.com/v4/people/%d?$expand=" %ID)
+    r = requests.get(Requestaddy,
+                     auth=(username,MyCpassword))
+    return r.json()
+
+def MyC_FindorCreate(Person):
+    """Function matches a JSON to My Campaign, and creates a new person if match fails.
+    Match candidate's minimum fields outlined in http://developers.ngpvan.com/van-api#people-overview"""
+    Postaddy = "https://api.securevan.com/v4/people/findOrCreate"
+    r = requests.post(Postaddy,
+                      headers = {'Content-Type' : 'application/json'},
+                      auth=(username,MyCpassword),
+                      json= Person,
+                     )
+    return r.json()
+
+def MyC_GetEventList(startingAfter= None):
+    """Returns Pandas dataframe of events.
+    Optional arguments: startdate='2015-01-01' """
+    GetEventsaddy = "https://api.securevan.com/v4/events"
+    expansions = []
+    expand = False
+    if startingAfter is not None:
+        strtoappend = 'startingAfter=%s' %(startingAfter)
+        expansions.append(strtoappend)
+        expand = True
+    if expand == True:
+        expansions = '&'.join(expansions)
+        GetEventsaddy = "%s?%s" %(GetEventsaddy,expansions)
+    r = requests.get(GetEventsaddy,
+                    auth=(username,MyCpassword))
+    if r.json()['count'] > 0:
+        return pd.io.json.json_normalize(r.json()['items'])
+    else:
+        print"No Events Found"
+    
+
+def MyC_GetEventStatuses(EventID):
+    """Returns Pandas dataframe of event Statuses, for joining to Signups"""
+    GetStatusaddy = "https://api.securevan.com/v4/signups/statuses"
+    Queryaddy = "%s?eventId=%d" % (GetStatusaddy,EventID)
+    r = requests.get(Queryaddy,
+                     auth=(username,MyCpassword))
+    return pd.DataFrame(r.json())
+
+def MyC_GetEventInfo(EventID,shifts=False,roles=False,locations=False):
+    """Returns a json of info based on EventID.  Optional expansions are shifts, roles and locations"""
+    GetInfoaddy = "https://api.securevan.com/v4/events/%d"%EventID
+    expand = False
+    expansions = []
+    if shifts == True:
+        expansions.append('shifts')
+        expand = True
+    if roles == True:
+        expansions.append('roles')
+        expand = True
+    if locations == True:
+        expansions.append('locations')
+        expand = True
+    if expand == True:
+        expansions = ','.join(expansions)
+        GetInfoaddy = "%s?$expand=%s"%(GetInfoaddy,expansions)
+    r = requests.get(GetInfoaddy,
+                     auth=(username,MyCpassword))
+    return r.json()       
+
+def MyC_GetEventSignUps(EventID):
+    """Returns Pandas dataframe of Signups"""
+    GetSignupaddy = "https://api.securevan.com/v4/signups"
+    Queryaddy = "%s?eventId=%d" % (GetSignupaddy,EventID)
+    r = requests.get(Queryaddy,
+                     auth=(username,MyCpassword))
+    if r.json()['count'] > 0:
+        return pd.io.json.json_normalize(r.json()['items'])
+    else:
+        print"No SignUps Found"
+
+def MyC_CreateorModifySignup(vanID,eventID,Shift,Role,Status,Location):
+    """Creates or Modifies a signup using on a maddening number of required fields"""
+    Postaddy ="https://api.securevan.com/v4/signups"
+    data= {"person": {"vanId": vanID,},
+           "event": {"eventId": eventID,},
+           "shift": {"eventShiftId": Shift,},
+           "role": {"roleId": Role},
+           "status": {"statusId": Status},
+           "location": {"locationId": Location}
+          }   
+    r = requests.post(Postaddy,
+                      headers = {'Content-Type' : 'application/json'},
+                      auth=(username,MyCpassword),
+                      json= data,
+                     )
+    return r.text
